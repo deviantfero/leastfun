@@ -1,2 +1,2 @@
-# min2fun
+# leastfun
 A numerical analysis asignment for finding equations with the least squares method.
