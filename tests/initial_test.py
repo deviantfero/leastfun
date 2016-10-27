@@ -6,7 +6,7 @@ sys.path.append( os.path.join('..', 'leastfun'))
 from proc.least import *
 from sympy import *
 
-varlist = ['x']
+varlist = ['x', 'y', 'varx', 'varb']
 
 class leastTest(unittest.TestCase):
 

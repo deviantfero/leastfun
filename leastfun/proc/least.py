@@ -46,6 +46,7 @@ class Transformer():
                 for val in self.ptsx:
                     tmp = []
                     tmp.append( self.ptsy[0].subs(self.var,val) )
+                    self.oldptsy = tmp
                     self.ptsy = tmp
                     tmp = []
             else:
@@ -79,6 +80,7 @@ class Transformer():
         Gets the least square with the aff = [1, ln(var)]
         :returns: leastsquare equation where y = exp(leastsquare)
         """
+        oldptsy = self.ptsy
         if len(self.ptsy) == 1:
             for val in self.ptsx:
                 tmp = []
@@ -91,13 +93,16 @@ class Transformer():
         for x in self.ptsx:
             if x == 0:
                 raise ValueError('No 0 on LN')
-        return exp(self.minimize_disc([1,'ln('+str(self.var)+')']))
+        rvalue = exp(self.minimize_disc([1,'ln('+str(self.var)+')']))
+        self.ptsy = oldptsy
+        return rvalue
 
     def minimize_disc_exp(self):
         """
         Gets the least square with the aff = [1, var]
         :returns: leastsquare equation where y = exp(leastsquare)
         """
+        oldptsy = self.ptsy
         if len(self.ptsy) == 1:
             for val in self.ptsx:
                 tmp = []
@@ -106,8 +111,9 @@ class Transformer():
                 tmp = []
         else:
             self.ptsy = [log(vary) for vary in self.ptsy]
-
-        return exp(self.minimize_disc([1, self.var]))
+        rvalue = exp(self.minimize_disc([1, self.var]))
+        self.ptsy = oldptsy
+        return rvalue
 
     def minimize_cont(self, aff):
         """Gets the least square polinomial according
