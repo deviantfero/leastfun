@@ -4,7 +4,6 @@ import unittest
 
 sys.path.append( os.path.join('..', 'leastfun'))
 from proc.least import *
-from sympy import *
 
 varlist = ['x', 'y', 'varx', 'varb']
 
