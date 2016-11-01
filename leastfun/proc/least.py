@@ -31,7 +31,7 @@ class Transformer():
         self.cs = []
         self.eq = 0
 
-    
+
     def minimize_disc(self, aff):
         """Gets the least square polinomial according
         to the aff given
@@ -43,18 +43,16 @@ class Transformer():
         self.reset_ans()
         if len(self.ptsx) != len(self.ptsy):
             if len(self.ptsy) == 1:
+                tmp = []
                 for val in self.ptsx:
-                    tmp = []
-                    tmp.append( self.ptsy[0].subs(self.var,val) )
-                    self.oldptsy = tmp
-                    self.ptsy = tmp
-                    tmp = []
+                    tmp.append( sympify(self.ptsy[0]).subs(self.var,val) )
+                self.oldptsy = tmp
+                self.ptsy = tmp
             else:
                 raise ValueError('List size invalid')
 
         for xp in aff:
-            xp = sympify(xp)
-            self.unsolved_m.append( [ xp.subs( self.var, pt ) for pt in self.ptsx ] )
+            self.unsolved_m.append( [ sympify(xp).subs( self.var, pt ) for pt in self.ptsx ] )
 
         self.unsolved_m = Matrix(self.unsolved_m)
 
@@ -69,7 +67,7 @@ class Transformer():
         self.rmat = Matrix(self.rmat).rref()[0]
 
         self.cs = N(self.rmat.col( self.rmat.cols - 1 ))
-        
+
         for i, el in enumerate(aff):
             self.eq += sympify(el)*self.cs[i]
 
@@ -82,11 +80,10 @@ class Transformer():
         """
         oldptsy = self.ptsy
         if len(self.ptsy) == 1:
+            tmp = []
             for val in self.ptsx:
-                tmp = []
                 tmp.append( log(self.ptsy[0]).subs(self.var,val) )
-                self.ptsy = tmp
-                tmp = []
+            self.ptsy = tmp
         else:
             self.ptsy = [log(vary) for vary in self.ptsy]
 
@@ -104,11 +101,10 @@ class Transformer():
         """
         oldptsy = self.ptsy
         if len(self.ptsy) == 1:
+            tmp = []
             for val in self.ptsx:
-                tmp = []
                 tmp.append( log(self.ptsy[0]).subs(self.var,val) )
-                self.ptsy = tmp
-                tmp = []
+            self.ptsy = tmp
         else:
             self.ptsy = [log(vary) for vary in self.ptsy]
         rvalue = exp(self.minimize_disc([1, self.var]))
@@ -141,7 +137,7 @@ class Transformer():
         self.rmat = Matrix(self.unsolved_m).rref()[0]
 
         self.cs = N(self.rmat.col( self.rmat.cols - 1 ))
-        
+
         for i, el in enumerate(aff):
             self.eq += sympify(el)*self.cs[i]
 

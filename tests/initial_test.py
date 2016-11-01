@@ -9,10 +9,9 @@ varlist = ['x', 'y', 'varx', 'varb']
 
 class leastTest(unittest.TestCase):
 
-
     def test_discrete(self):
         expr = Transformer('vxr')
-        expr.ptsx = [1,2,3,4,5,6]
+        expr.ptsx = [cos(0),2,3,4,5,6]
         expr.ptsy = [x**2 for x in expr.ptsx]
         val = expr.minimize_disc([1, 'vxr'])
         val = val.subs(expr.var,0)
