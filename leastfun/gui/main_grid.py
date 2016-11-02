@@ -33,7 +33,6 @@ class MainGrid(Gtk.Grid):
         for elem in ['Custom', 'Exponential', 'Power']:
             aff_list.append( [elem] )
 
-
         #--Affinity
         self.txt_aff = Gtk.Entry()
         self.txt_aff.set_placeholder_text('1+var+var² > 1,var,var^2')
@@ -59,7 +58,7 @@ class MainGrid(Gtk.Grid):
 
         #--Vars
         self.txt_var = Gtk.Entry()
-        self.txt_var.set_placeholder_text('x or y or varx')
+        self.txt_var.set_placeholder_text('x or y or vx and so on')
         self.lbl_var = Gtk.Label( 'Variable:' )
         self.lbl_var.set_justify( Gtk.Justification.LEFT )
         self.lbl_var.set_xalign(0)
@@ -113,14 +112,11 @@ class MainGrid(Gtk.Grid):
             self.lbl_aff.hide()
 
     def on_ok_press( self, ok_button ):
-        rexp = regexp.compile(r"[a-z]+")
+        rexp = regexp.compile(r"[a-z]{1,2}")
         varn = self.txt_var.get_text()
 
         if not rexp.fullmatch( varn ):
             self.raise_err_dialog( 'Invalid Variable' )
-            return
-        elif varn == "varn":
-            self.raise_err_dialog( 'varn is not a valid Variable' )
             return
 
         listx = list_parser(self.txt_ptsx.get_text())
@@ -133,17 +129,20 @@ class MainGrid(Gtk.Grid):
         elif not listy and not listx:
             self.raise_err_dialog( 'Invalid or empty points list on X and Y' )
         else:
-            expr = Transformer( varn )
-            expr.ptsx = listx
-            expr.ptsy = listy
-            if self.aff_combo.get_active() == 0:
-                listaff = list_parser(self.txt_aff.get_text())
-                if not listaff:
-                    self.raise_err_dialog( 'Invalid affinity selected' )
-                    return
+            try:
+                expr = Transformer( varn )
+                expr.ptsx = listx
+                expr.ptsy = listy
+                if self.aff_combo.get_active() == 0:
+                    listaff = list_parser(self.txt_aff.get_text())
+                    if not listaff:
+                        self.raise_err_dialog( 'Invalid affinity selected' )
+                        return
+                    else:
+                        print(expr.minimize_disc(listaff))
+                elif self.aff_combo.get_active() == 1:
+                    print(expr.minimize_disc_exp())
                 else:
-                    print(expr.minimize_disc(listaff))
-            elif self.aff_combo.get_active() == 1:
-                print(expr.minimize_disc_exp())
-            else:
-                print(expr.minimize_disc_pot())
+                    print(expr.minimize_disc_pot())
+            except ValueError:
+                self.raise_err_dialog( 'Invalid list size' )
