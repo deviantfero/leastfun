@@ -69,7 +69,7 @@ class Transformer():
         self.cs = N(self.rmat.col( self.rmat.cols - 1 ))
 
         for i, el in enumerate(aff):
-            self.eq += sympify(el)*self.cs[i]
+            self.eq += sympify(el)*round( self.cs[i], 6 )
 
         return sympify(self.eq)
 
@@ -139,7 +139,7 @@ class Transformer():
         self.cs = N(self.rmat.col( self.rmat.cols - 1 ))
 
         for i, el in enumerate(aff):
-            self.eq += sympify(el)*self.cs[i]
+            self.eq += sympify(el)*round( self.cs[i], 6 )
 
         return sympify(self.eq)
 

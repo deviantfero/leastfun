@@ -14,6 +14,9 @@ class MainGrid(Gtk.Grid):
     def __init__(self, parent):
         Gtk.Grid.__init__(self)
         self.parent = parent
+
+        self.answer = ""
+
         self.set_border_width( WIDTH )
         self.set_column_homogeneous( 1 )
         self.set_row_spacing( WIDTH )
@@ -29,9 +32,18 @@ class MainGrid(Gtk.Grid):
         self.button_grid.set_row_spacing( WIDTH )
         self.button_grid.set_column_spacing( WIDTH )
 
+        self.radio_grid = Gtk.Grid()
+        self.radio_grid.set_column_homogeneous(1)
+        self.radio_grid.set_row_spacing( WIDTH )
+        self.radio_grid.set_column_spacing( WIDTH )
+
         aff_list = Gtk.ListStore( str )
         for elem in ['Custom', 'Exponential', 'Power']:
             aff_list.append( [elem] )
+
+        #--Answer
+        self.txt_ans = Gtk.Label( 'hello' )
+        self.txt_ans.set_no_show_all( True )
 
         #--Affinity
         self.txt_aff = Gtk.Entry()
@@ -75,8 +87,15 @@ class MainGrid(Gtk.Grid):
 
         #--Buttons
         self.button_ok = Gtk.Button( 'Ok' )
-        self.button_ok.connect( "pressed", self.on_ok_press )
+        self.handler_id = self.button_ok.connect( "pressed", self.on_ok_press_disc )
         self.button_load = Gtk.Button( 'Load' )
+
+        #--RadioButtons
+        self.radio_disc = Gtk.RadioButton.new_with_label_from_widget( None, 'Discrete' )
+        self.radio_cont = Gtk.RadioButton.new_from_widget( self.radio_disc )
+        self.radio_cont.set_label( 'Continuous' )
+        self.radio_disc.connect( 'toggled', self.on_mode_change, 'disc' )
+        self.radio_cont.connect( 'toggled', self.on_mode_change, 'cont' )
 
         #--Grid attaching
         self.text_grid.attach( self.lbl_var, 1, 1, 1, 1 )
@@ -91,9 +110,14 @@ class MainGrid(Gtk.Grid):
         self.button_grid.attach( self.button_ok, 1, 1, 1, 1 )
         self.button_grid.attach( self.button_load, 2, 1, 1, 1 )
 
+        self.radio_grid.attach( self.radio_disc, 1, 1, 1, 1 )
+        self.radio_grid.attach( self.radio_cont, 2, 1, 1, 1 )
+
         self.attach( self.aff_combo, 1, 1, 1, 1 )
-        self.attach( self.text_grid, 1, 2, 1, 1 )
-        self.attach( self.button_grid, 1, 3, 1, 1 )
+        self.attach( self.radio_grid, 1, 2, 1, 1 )
+        self.attach( self.text_grid, 1, 3, 1, 1 )
+        self.attach( self.button_grid, 1, 4, 1, 1 )
+        self.attach( self.txt_ans, 1, 5, 1, 1 )
 
     #--Extra methods
     def raise_err_dialog( self, message ):
@@ -111,7 +135,23 @@ class MainGrid(Gtk.Grid):
             self.txt_aff.hide()
             self.lbl_aff.hide()
 
-    def on_ok_press( self, ok_button ):
+    def on_mode_change( self, r_button, mode ):
+        if r_button.get_active() and mode == 'cont':
+            self.button_ok.disconnect( self.handler_id )
+            self.handler_id = self.button_ok.connect( "pressed", self.on_ok_press_cont )
+            self.lbl_ptsy.set_label( "f(X):" )
+            self.txt_ptsy.set_placeholder_text( "var + var^2 etc.." )
+            self.lbl_ptsx.set_label( "Range:" )
+            self.txt_ptsx.set_placeholder_text( "a,b" )
+        elif r_button.get_active() and mode == 'disc':
+            self.button_ok.disconnect( self.handler_id )
+            self.handler_id = self.button_ok.connect( "pressed", self.on_ok_press_disc )
+            self.lbl_ptsy.set_label( "Points in f(X):" )
+            self.txt_ptsy.set_placeholder_text('1,2,3...n or cos(var)')
+            self.lbl_ptsx.show()
+            self.txt_ptsx.show()
+
+    def on_ok_press_disc( self, ok_button ):
         rexp = regexp.compile(r"[a-z]{1,2}")
         varn = self.txt_var.get_text()
 
@@ -139,10 +179,48 @@ class MainGrid(Gtk.Grid):
                         self.raise_err_dialog( 'Invalid affinity selected' )
                         return
                     else:
-                        print(expr.minimize_disc(listaff))
+                        self.answer = expr.minimize_disc(listaff)
                 elif self.aff_combo.get_active() == 1:
-                    print(expr.minimize_disc_exp())
+                    self.answer = expr.minimize_disc_exp()
                 else:
-                    print(expr.minimize_disc_pot())
+                    self.answer = expr.minimize_disc_pot()
             except ValueError:
                 self.raise_err_dialog( 'Invalid list size' )
+        self.txt_ans.set_label( str(self.answer) )
+        self.txt_ans.show()
+
+    def on_ok_press_cont( self, ok_button ):
+        rexp = regexp.compile(r"[a-z]{1,2}")
+        varn = self.txt_var.get_text()
+
+        listx = list_parser(self.txt_ptsx.get_text())
+
+        if not rexp.fullmatch( varn ):
+            self.raise_err_dialog( 'Invalid Variable' )
+            return
+        else:
+            try:
+                expr = Transformer( varn )
+                expr.fx = self.txt_ptsy.get_text()
+                expr.ptsx = listx
+                if self.aff_combo.get_active() == 0:
+                    listaff = list_parser(self.txt_aff.get_text())
+                    if not listaff:
+                        self.raise_err_dialog( 'Invalid affinity selected' )
+                        return
+                    else:
+                        self.answer = expr.minimize_cont(listaff)
+                elif self.aff_combo.get_active() == 1:
+                    if 'cos' in expr.fx or 'sin' in expr.fx:
+                        self.raise_err_dialog('Invalid fx in this affinity')
+                    else:
+                        self.answer = expr.minimize_cont_exp()
+                else:
+                    if 'cos' in expr.fx or 'sin' in expr.fx:
+                        self.raise_err_dialog('Invalid fx in this affinity')
+                    else:
+                        self.answer = expr.minimize_cont_pot()
+            except ValueError:
+                self.raise_err_dialog( 'Wrong range' )
+        self.txt_ans.set_label( str(self.answer) )
+        self.txt_ans.show()
