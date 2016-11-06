@@ -51,7 +51,7 @@ class MainGrid(Gtk.Grid):
         self.txt_aff.set_no_show_all( True )
         self.lbl_aff = Gtk.Label( 'Affinity:' )
         self.lbl_aff.set_justify( Gtk.Justification.LEFT )
-        self.lbl_aff.set_xalign(0)
+
         self.lbl_aff.set_no_show_all( True )
 
         #--Points in X
@@ -59,21 +59,21 @@ class MainGrid(Gtk.Grid):
         self.txt_ptsx.set_placeholder_text('1,2,3...n')
         self.lbl_ptsx = Gtk.Label( 'Points in X:' )
         self.lbl_ptsx.set_justify( Gtk.Justification.LEFT )
-        self.lbl_ptsx.set_xalign(0)
+
 
         #--Points in Y
         self.txt_ptsy = Gtk.Entry()
         self.txt_ptsy.set_placeholder_text('1,2,3...n or cos(var)')
         self.lbl_ptsy = Gtk.Label( 'Points in f(X):' )
         self.lbl_ptsy.set_justify( Gtk.Justification.LEFT )
-        self.lbl_ptsy.set_xalign(0)
+
 
         #--Vars
         self.txt_var = Gtk.Entry()
         self.txt_var.set_placeholder_text('x or y or vx and so on')
         self.lbl_var = Gtk.Label( 'Variable:' )
         self.lbl_var.set_justify( Gtk.Justification.LEFT )
-        self.lbl_var.set_xalign(0)
+
 
         #--Regression combo box
         self.aff_combo = Gtk.ComboBox.new_with_model( aff_list )

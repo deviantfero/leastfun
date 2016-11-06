@@ -11,7 +11,7 @@ WIDTH = 10
 
 class MainWin( Gtk.Window ):
     def __init__( self ):
-        Gtk.Window.__init__( self, title='titulo aqui')
+        Gtk.Window.__init__( self, title='leastfun')
         self.connect('delete-event', Gtk.main_quit)
         self.set_border_width( WIDTH )
         self.set_default_size( 200, 200 )
