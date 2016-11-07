@@ -21,7 +21,7 @@ class GraphGrid(Gtk.Grid):
         self.parent = parent
 
         self.fig = Figure( figsize=(5,5), dpi=72 )
-        self.axis = self.fig.add_subplot( 211 )
+        self.axis = self.fig.add_subplot( 111 )
         self.axis.grid( True )
         self.graph_count = 0
 
@@ -58,7 +58,7 @@ class GraphGrid(Gtk.Grid):
     def render_main_eq( self, eq, vr, ran ):
         seq = sympify( eq )
         evaleq = lambdify(sympify( vr ), seq, modules=['numpy'])
-        ran = linspace( ran[0], ran[1], 200)
+        ran = linspace( ran[0]-10, ran[1]+10, 200)
         self.axis.set_title( eq )
         zp = ZoomPan()
         figZoom = zp.zoom_factory( self.axis, base_scale=0.5 )
@@ -75,3 +75,5 @@ class GraphGrid(Gtk.Grid):
 
     def on_clear_press( self, button ):
         self.axis.cla()
+        self.axis.grid( True )
+        self.graph_count = 0

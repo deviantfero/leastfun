@@ -188,6 +188,7 @@ class MainGrid(Gtk.Grid):
                     self.answer = expr.minimize_disc_exp()
                 else:
                     self.answer = expr.minimize_disc_pot()
+                    expr.ptsx.sort()
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx.pop())])
             except ( ValueError, AttributeError ):
                 self.raise_err_dialog( 'Invalid list size' )
@@ -225,7 +226,8 @@ class MainGrid(Gtk.Grid):
                         self.raise_err_dialog('Invalid fx in this affinity')
                     else:
                         self.answer = expr.minimize_cont_pot()
-                self.send_ans( str(self.answer), varn, [expr.ptsx[0], expr.ptsx.pop()] )
+                print( str(self.answer) )
+                self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx.pop())])
             except ( ValueError, AttributeError ): 
                 self.raise_err_dialog( 'Wrong range' )
         self.txt_ans.set_label( str(self.answer) )
