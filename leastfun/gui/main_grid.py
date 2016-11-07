@@ -26,6 +26,7 @@ class MainGrid(Gtk.Grid):
         self.text_grid.set_column_homogeneous(1)
         self.text_grid.set_row_spacing( WIDTH )
         self.text_grid.set_column_spacing( WIDTH )
+        self.text_grid.set_vexpand( True )
 
         self.button_grid = Gtk.Grid()
         self.button_grid.set_column_homogeneous(1)
@@ -126,6 +127,9 @@ class MainGrid(Gtk.Grid):
         err_var.run()
         err_var.destroy()
 
+    def send_ans( self, eqx, vr, ran ):
+        self.parent.gmodule.render_main_eq( eqx, vr, ran )
+
     #--Actions
     def on_aff_change( self, aff_combo ):
         if( aff_combo.get_active() == 0 ):
@@ -184,7 +188,8 @@ class MainGrid(Gtk.Grid):
                     self.answer = expr.minimize_disc_exp()
                 else:
                     self.answer = expr.minimize_disc_pot()
-            except ValueError:
+                self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx.pop())])
+            except ( ValueError, AttributeError ):
                 self.raise_err_dialog( 'Invalid list size' )
         self.txt_ans.set_label( str(self.answer) )
         self.txt_ans.show()
@@ -220,7 +225,8 @@ class MainGrid(Gtk.Grid):
                         self.raise_err_dialog('Invalid fx in this affinity')
                     else:
                         self.answer = expr.minimize_cont_pot()
-            except ValueError:
+                self.send_ans( str(self.answer), varn, [expr.ptsx[0], expr.ptsx.pop()] )
+            except ( ValueError, AttributeError ): 
                 self.raise_err_dialog( 'Wrong range' )
         self.txt_ans.set_label( str(self.answer) )
         self.txt_ans.show()

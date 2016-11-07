@@ -1,5 +1,5 @@
 import re
-from sympy.parsing.sympy_parser import parse_expr
+from sympy.parsing.sympy_parser import *
 
 def list_parser( txt ):
     """This function provides validations for a single list
@@ -14,5 +14,5 @@ def list_parser( txt ):
 
     try:
         return [ parse_expr(n, evaluate=True) for n in txtlist ]
-    except SyntaxError:
+    except ( SyntaxError, sympy.parsing.sympy_tokenize.TokenError ):
         return []
