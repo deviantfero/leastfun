@@ -21,7 +21,8 @@ class GraphGrid(Gtk.Grid):
         self.parent = parent
 
         self.fig = Figure( figsize=(5,5), dpi=72 )
-        self.axis = self.fig.add_subplot( 111 )
+        self.axis = self.fig.add_subplot( 211 )
+        self.axis.grid( True )
         self.graph_count = 0
 
         self.set_border_width( WIDTH )
