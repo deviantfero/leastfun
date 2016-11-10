@@ -8,9 +8,14 @@ def list_parser( txt ):
     :txt: the text to be parsed
     :returns: a list if it's succesfull or [] if it fails
     """
-    rexp = re.compile( "\d+\.?\d*?" )
+    rexp = re.compile( "\d+\.\.\.\d+" )
     txt = txt.replace( '^', '**' )
-    txtlist = txt.replace(' ', '').split(',')
+    if rexp.fullmatch(txt):
+        tmp = txt.split('...')
+        txtlist = list(range(int(tmp[0]), int(tmp[1]) + 1))
+        txtlist = [str(x) for x in txtlist]
+    else:
+        txtlist = txt.replace(' ', '').split(',')
 
     try:
         return [ parse_expr(n, evaluate=True) for n in txtlist ]

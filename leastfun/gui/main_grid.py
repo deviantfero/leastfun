@@ -37,9 +37,10 @@ class MainGrid(Gtk.Grid):
         self.radio_grid.set_column_homogeneous(1)
         self.radio_grid.set_row_spacing( WIDTH )
         self.radio_grid.set_column_spacing( WIDTH )
+        self.radio_grid.set_vexpand( True )
 
         aff_list = Gtk.ListStore( str )
-        for elem in ['Custom', 'Exponential', 'Power']:
+        for elem in ['Custom', 'Exponential', 'Power', 'Logarithmic']:
             aff_list.append( [elem] )
 
         #--Answer
@@ -120,15 +121,14 @@ class MainGrid(Gtk.Grid):
         self.attach( self.button_grid, 1, 4, 1, 1 )
         self.attach( self.txt_ans, 1, 5, 1, 1 )
 
-    #--Extra methods
-    def raise_err_dialog( self, message ):
-        err_var = Gtk.MessageDialog( self.parent, 0, Gtk.MessageType.ERROR,
-                Gtk.ButtonsType.CANCEL, message)
-        err_var.run()
-        err_var.destroy()
-
     def send_ans( self, eqx, vr, ran ):
         self.parent.gmodule.render_main_eq( eqx, vr, ran )
+
+    def send_points( self, eqx, vr, ran ):
+        self.parent.gmodule.render_points( eqx, vr, ran )
+
+    def save_ans( self, filename ):
+        self.parent.gmodule.save_render( filename )
 
     #--Actions
     def on_aff_change( self, aff_combo ):
@@ -149,7 +149,7 @@ class MainGrid(Gtk.Grid):
             self.txt_ptsx.set_placeholder_text( "a,b" )
         elif r_button.get_active() and mode == 'disc':
             self.button_ok.disconnect( self.handler_id )
-            self.handler_id = self.button_ok.connect( "pressed", self.on_ok_press_disc )
+            self.handler_id = self.button_ok.connect( 'pressed', self.on_ok_press_disc )
             self.lbl_ptsy.set_label( "Points in f(X):" )
             self.txt_ptsy.set_placeholder_text('1,2,3...n or cos(var)')
             self.lbl_ptsx.show()
@@ -160,18 +160,19 @@ class MainGrid(Gtk.Grid):
         varn = self.txt_var.get_text()
 
         if not rexp.fullmatch( varn ):
-            self.raise_err_dialog( 'Invalid Variable' )
+            self.parent.raise_err_dialog( 'Invalid Variable' )
             return
 
         listx = list_parser(self.txt_ptsx.get_text())
         listy = list_parser(self.txt_ptsy.get_text())
+        last = len(listx) - 1
 
         if not listx and listy:
-            self.raise_err_dialog( 'Invalid X points list' )
+            self.parent.raise_err_dialog( 'Invalid X points list' )
         elif not listy and listx:
-            self.raise_err_dialog( 'Invalid F(X) points list' )
+            self.parent.raise_err_dialog( 'Invalid F(X) points list' )
         elif not listy and not listx:
-            self.raise_err_dialog( 'Invalid or empty points list on X and Y' )
+            self.parent.raise_err_dialog( 'Invalid or empty points list on X and Y' )
         else:
             try:
                 expr = Transformer( varn )
@@ -180,18 +181,23 @@ class MainGrid(Gtk.Grid):
                 if self.aff_combo.get_active() == 0:
                     listaff = list_parser(self.txt_aff.get_text())
                     if not listaff:
-                        self.raise_err_dialog( 'Invalid affinity selected' )
+                        self.parent.raise_err_dialog( 'Invalid affinity selected' )
                         return
                     else:
                         self.answer = expr.minimize_disc(listaff)
                 elif self.aff_combo.get_active() == 1:
                     self.answer = expr.minimize_disc_exp()
+                elif self.aff_combo.get_active() == 3:
+                    self.answer = expr.minimize_disc_ln()
                 else:
                     self.answer = expr.minimize_disc_pot()
                     expr.ptsx.sort()
-                self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx.pop())])
-            except ( ValueError, AttributeError ):
-                self.raise_err_dialog( 'Invalid list size' )
+                self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[last])])
+                self.send_points( expr.ptsx, expr.ptsy, [float(expr.ptsx[0]), float(expr.ptsx[last])])
+                self.save_ans( "ans.png" )
+            except ( ValueError, AttributeError ) as e:
+                raise e
+                self.parent.raise_err_dialog( 'Invalid list size' )
         self.txt_ans.set_label( str(self.answer) )
         self.txt_ans.show()
 
@@ -202,7 +208,7 @@ class MainGrid(Gtk.Grid):
         listx = list_parser(self.txt_ptsx.get_text())
 
         if not rexp.fullmatch( varn ):
-            self.raise_err_dialog( 'Invalid Variable' )
+            self.parent.raise_err_dialog( 'Invalid Variable' )
             return
         else:
             try:
@@ -212,23 +218,31 @@ class MainGrid(Gtk.Grid):
                 if self.aff_combo.get_active() == 0:
                     listaff = list_parser(self.txt_aff.get_text())
                     if not listaff:
-                        self.raise_err_dialog( 'Invalid affinity selected' )
+                        self.parent.raise_err_dialog( 'Invalid affinity selected' )
                         return
                     else:
                         self.answer = expr.minimize_cont(listaff)
                 elif self.aff_combo.get_active() == 1:
                     if 'cos' in expr.fx or 'sin' in expr.fx:
-                        self.raise_err_dialog('Invalid fx in this affinity')
+                        self.parent.raise_err_dialog('Invalid fx in this affinity')
                     else:
                         self.answer = expr.minimize_cont_exp()
+                elif self.aff_combo.get_active() == 3:
+                    if float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
+                        self.parent.raise_err_dialog('Invalid range in this affinity')
+                    else:
+                        self.answer = expr.minimize_cont_ln()
                 else:
-                    if 'cos' in expr.fx or 'sin' in expr.fx:
-                        self.raise_err_dialog('Invalid fx in this affinity')
+                    if float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
+                        self.parent.raise_err_dialog('Invalid range in this affinity')
                     else:
                         self.answer = expr.minimize_cont_pot()
-                print( str(self.answer) )
-                self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx.pop())])
-            except ( ValueError, AttributeError ): 
-                self.raise_err_dialog( 'Wrong range' )
+                self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
+                self.send_ans( str(expr.fx), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
+                self.save_ans( "ans.png" )
+            except ( ValueError, AttributeError ) as e:
+                print( expr.ptsx )
+                raise e
+                self.parent.raise_err_dialog( 'Wrong range' )
         self.txt_ans.set_label( str(self.answer) )
         self.txt_ans.show()

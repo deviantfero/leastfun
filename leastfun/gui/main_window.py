@@ -25,6 +25,12 @@ class MainWin( Gtk.Window ):
         self.tabs.append_page( self.cmodule, Gtk.Label( "Control" ) )
         self.tabs.append_page( self.gmodule, Gtk.Label( "Graph" ) )
 
+    def raise_err_dialog( self, message ):
+        err_var = Gtk.MessageDialog( self , 0, Gtk.MessageType.ERROR,
+                Gtk.ButtonsType.CANCEL, message)
+        err_var.run()
+        err_var.destroy()
+
 def run():
     win = MainWin()
     win.show_all()
