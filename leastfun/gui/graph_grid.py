@@ -111,11 +111,14 @@ class GraphGrid(Gtk.Grid):
     def save_render( self, filename ):
         self.fig.savefig(filename)
 
-    def render_points( self, ptsx, ptsy, ran ):
+    def render_points( self, ptsx, ptsy, ran, lbl='Points given' ):
         if self.graph_count < 2:
-            self.axis.plot( ptsx, ptsy, 'ro', label='Points given' )
-            self.axis.legend( loc='best' )
-            self.axis.margins( 0.4 )
+            try:
+                self.axis.plot( ptsx, ptsy, COLOR[random.randint(0, len(COLOR) - 1)] + 'o', label=lbl)
+                self.axis.legend( loc='best' )
+                self.axis.margins( 0.4 )
+            except Exception:
+                self.parent.raise_err_dialog( "Invalid points to interpolate" )
 
     def on_clear_press( self, button ):
         self.axis.cla()

@@ -21,6 +21,7 @@ class Transformer():
         self.unsolved_m = []
         self.cs = []
         self.eq = 0
+        self.interpolation = []
 
     def reset_ans(self):
         """
@@ -28,6 +29,7 @@ class Transformer():
         """
         self.rmat = []
         self.unsolved_m = []
+        self.interpolation = []
         self.cs = []
         self.eq = 0
 
@@ -93,9 +95,9 @@ class Transformer():
         for x in self.ptsx:
             if x == 0:
                 raise ValueError('No 0 on LN')
-        rvalue = exp(self.minimize_disc([1,'ln('+str(self.var)+')']))
+        self.eq = exp(self.minimize_disc([1,'ln('+str(self.var)+')']))
         #self.ptsy = oldptsy
-        return rvalue
+        return self.eq
 
     def minimize_disc_ln(self):
         """
@@ -112,9 +114,9 @@ class Transformer():
         for x in self.ptsx:
             if x == 0:
                 raise ValueError('No 0 on LN')
-        rvalue = self.minimize_disc([1,'ln('+str(self.var)+')'])
+        self.eq = self.minimize_disc([1,'ln('+str(self.var)+')'])
         #self.ptsy = oldptsy
-        return rvalue
+        return self.eq
 
     def minimize_disc_exp(self):
         """
@@ -129,9 +131,9 @@ class Transformer():
             self.ptsy = tmp
         else:
             self.ptsy = [log(vary) for vary in self.ptsy]
-        rvalue = exp(self.minimize_disc([1, self.var]))
+        self.eq = exp(self.minimize_disc([1, self.var]))
         #self.ptsy = oldptsy
-        return rvalue
+        return self.eq
 
     def minimize_cont(self, aff):
         """Gets the least square polinomial according
@@ -175,7 +177,8 @@ class Transformer():
         :returns: leastsquare equation where y = exp(leastsquare)
         """
         self.fx = 'log('+self.fx+')'
-        return exp(self.minimize_cont([1, log(self.var)]))
+        self.eq = exp(self.minimize_cont([1, log(self.var)]))
+        return self.eq
 
     def minimize_cont_ln(self):
         """
@@ -183,7 +186,8 @@ class Transformer():
         in a continuous range
         :returns: leastsquare equation where y = exp(leastsquare)
         """
-        return self.minimize_cont([1, log(self.var)])
+        self.eq = self.minimize_cont([1, log(self.var)])
+        return self.eq
 
     def minimize_cont_exp(self):
         """
@@ -192,4 +196,14 @@ class Transformer():
         :returns: leastsquare equation where y = exp(leastsquare)
         """
         self.fx = 'log('+self.fx+')'
-        return exp(self.minimize_cont([1, self.var]))
+        self.eq = exp(self.minimize_cont([1, self.var]))
+        return self.eq
+
+    def eval_interpolation(self, pointl):
+        """Returns the list of valuies in pointl evaluated in self.eq
+
+        :pointl: Points to evaluate
+        :returns: a list of results
+        """
+        self.interpolation = [ sympify(self.eq).subs(self.var, float(x)) for x in pointl ]
+        return self.interpolation

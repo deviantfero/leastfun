@@ -5,6 +5,7 @@ import re as regexp
 
 from ..proc.eparser import *
 from ..proc.least import *
+from ..proc.pdfactory import *
 from sympy import *
 
 WIDTH = 10
@@ -69,6 +70,12 @@ class MainGrid(Gtk.Grid):
         self.lbl_ptsy = Gtk.Label( 'Points in f(X):' )
         self.lbl_ptsy.set_justify( Gtk.Justification.LEFT )
 
+        #--Points to interpolate
+        self.txt_inter = Gtk.Entry()
+        self.txt_inter.set_placeholder_text('1,2...')
+        self.lbl_inter = Gtk.Label( 'Points to interpolate:' )
+        self.lbl_inter.set_justify( Gtk.Justification.LEFT )
+
 
         #--Vars
         self.txt_var = Gtk.Entry()
@@ -108,6 +115,8 @@ class MainGrid(Gtk.Grid):
         self.text_grid.attach( self.txt_ptsx, 2, 3, 2, 1 )
         self.text_grid.attach( self.lbl_ptsy, 1, 4, 1, 1 )
         self.text_grid.attach( self.txt_ptsy, 2, 4, 2, 1 )
+        self.text_grid.attach( self.lbl_inter, 1, 5, 1, 1 )
+        self.text_grid.attach( self.txt_inter, 2, 5, 2, 1 )
 
         self.button_grid.attach( self.button_ok, 1, 1, 1, 1 )
         self.button_grid.attach( self.button_load, 2, 1, 1, 1 )
@@ -124,8 +133,8 @@ class MainGrid(Gtk.Grid):
     def send_ans( self, eqx, vr, ran ):
         self.parent.gmodule.render_main_eq( eqx, vr, ran )
 
-    def send_points( self, eqx, vr, ran ):
-        self.parent.gmodule.render_points( eqx, vr, ran )
+    def send_points( self, eqx, vr, ran, lbl='Points Given' ):
+        self.parent.gmodule.render_points( eqx, vr, ran, lbl )
 
     def save_ans( self, filename ):
         self.parent.gmodule.save_render( filename )
@@ -165,6 +174,7 @@ class MainGrid(Gtk.Grid):
 
         listx = list_parser(self.txt_ptsx.get_text())
         listy = list_parser(self.txt_ptsy.get_text())
+        interpolate = list_parser(self.txt_inter.get_text())
         last = len(listx) - 1
 
         if not listx and listy:
@@ -192,9 +202,13 @@ class MainGrid(Gtk.Grid):
                 else:
                     self.answer = expr.minimize_disc_pot()
                     expr.ptsx.sort()
+                if interpolate:
+                    expr.eval_interpolation( interpolate )
+                    self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[last])], "Interpolation")
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[last])])
                 self.send_points( expr.ptsx, expr.ptsy, [float(expr.ptsx[0]), float(expr.ptsx[last])])
                 self.save_ans( "ans.png" )
+                make_pdf( expr, "result.pdf" )
             except ( ValueError, AttributeError ) as e:
                 raise e
                 self.parent.raise_err_dialog( 'Invalid list size' )
@@ -206,6 +220,7 @@ class MainGrid(Gtk.Grid):
         varn = self.txt_var.get_text()
 
         listx = list_parser(self.txt_ptsx.get_text())
+        interpolate = list_parser(self.txt_inter.get_text())
 
         if not rexp.fullmatch( varn ):
             self.parent.raise_err_dialog( 'Invalid Variable' )
@@ -237,6 +252,9 @@ class MainGrid(Gtk.Grid):
                         self.parent.raise_err_dialog('Invalid range in this affinity')
                     else:
                         self.answer = expr.minimize_cont_pot()
+                    if interpolate:
+                            expr.eval_interpolation( interpolate )
+                            self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[last])], "Interpolation")
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
                 self.send_ans( str(expr.fx), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
                 self.save_ans( "ans.png" )
