@@ -119,8 +119,8 @@ executables = [
 build_options = {
     'build_exe': 'build',
     'compressed': False,
-    'includes': ['gi', 'cairo', 'sympy'],
-    'packages': ['gi', 'cairo', 'sympy'],
+    'includes': ['gi', 'cairo', 'sympy', 'matplotlib', 'numpy', 'tkinter'],
+    'packages': ['gi', 'cairo', 'sympy', 'matplotlib', 'numpy', 'tkinter'],
     'include_files': []
 }
 
