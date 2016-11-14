@@ -98,7 +98,6 @@ class MainGrid(Gtk.Grid):
         #--Buttons
         self.button_ok = Gtk.Button( 'Ok' )
         self.handler_id = self.button_ok.connect( "pressed", self.on_ok_press_disc )
-        self.button_load = Gtk.Button( 'Load' )
 
         #--RadioButtons
         self.radio_disc = Gtk.RadioButton.new_with_label_from_widget( None, 'Discrete' )
@@ -120,7 +119,6 @@ class MainGrid(Gtk.Grid):
         self.text_grid.attach( self.txt_inter, 2, 5, 2, 1 )
 
         self.button_grid.attach( self.button_ok, 1, 1, 1, 1 )
-        self.button_grid.attach( self.button_load, 2, 1, 1, 1 )
 
         self.radio_grid.attach( self.radio_disc, 1, 1, 1, 1 )
         self.radio_grid.attach( self.radio_cont, 2, 1, 1, 1 )
