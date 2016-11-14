@@ -2,18 +2,23 @@ from gi import require_version
 require_version( 'Gtk', '3.0' )
 from gi.repository import Gtk
 
+import copy
+import os
+
 from matplotlib.figure import Figure
 from sympy import *
 from sympy.plotting import plot
 from ..proc.zoom import *
 from ..proc.eparser import *
+from ..proc.least import *
+from ..proc.pdfactory import *
 
 from numpy import *
 from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
 
 WIDTH = 10
 COLOR = ['b','g','c', 'm', 'k']
-STYLE = ['','o', '-', '+', '', '--', '-.', 'd', 'x']
+STYLE = ['','-', '+', '', '--', '-.']
 
 class GraphGrid(Gtk.Grid):
 
@@ -49,6 +54,10 @@ class GraphGrid(Gtk.Grid):
         self.button_clear.connect( 'pressed', self.on_clear_press )
         self.button_add = Gtk.Button( 'Add' )
         self.button_add.connect( 'pressed', self.on_add_press )
+        self.button_save = Gtk.Button( 'Save' )
+        self.button_save.connect( 'pressed', self.on_save_press )
+        self.button_snapshot = Gtk.Button( 'Snapshot' )
+        self.button_snapshot.connect( 'pressed', self.on_snapshot_press )
 
         #--Text Input
         self.txt_eq = Gtk.Entry()
@@ -63,6 +72,8 @@ class GraphGrid(Gtk.Grid):
         self.txt_ran.set_placeholder_text('a,b')
         self.lbl_ran = Gtk.Label( 'Range:' )
         self.lbl_ran.set_justify( Gtk.Justification.LEFT )
+        self.lbl_snapshot = Gtk.Label( 'Snapshot Taken' )
+        self.lbl_snapshot.set_no_show_all( True )
 
 
         #--Graph added to canvas
@@ -75,6 +86,9 @@ class GraphGrid(Gtk.Grid):
         self.button_grid.attach( self.txt_grid, 1,1,2,1 )
         self.button_grid.attach( self.button_add, 1,2,1,1 )
         self.button_grid.attach( self.button_clear, 2,2,1,1 )
+        self.button_grid.attach( self.button_snapshot, 1,3,1,1 )
+        self.button_grid.attach( self.button_save, 2,3,1,1 )
+        self.button_grid.attach( self.lbl_snapshot, 1,4,2,1 )
 
         #--Entry attachments
         self.txt_grid.attach( self.lbl_var, 1,1,1,1 )
@@ -92,7 +106,7 @@ class GraphGrid(Gtk.Grid):
         seq = sympify( eq )
         evaleq = lambdify(sympify( vr ), seq, modules=['numpy'])
         ran = linspace( ran[0], ran[1], 200)
-        self.axis.set_title( eq )
+        self.axis.set_title( 'fig.' + str(self.parent.cmodule.document.proc_count) )
         zp = ZoomPan()
         figZoom = zp.zoom_factory( self.axis, base_scale=0.9 )
         figPan = zp.pan_factory( self.axis )
@@ -111,6 +125,10 @@ class GraphGrid(Gtk.Grid):
     def save_render( self, filename ):
         self.fig.savefig(filename)
 
+    def on_snapshot_press( self, button ):
+        self.save_render( 'ans' + str(self.parent.cmodule.document.proc_count) + '.png' )
+        self.lbl_snapshot.show()
+
     def render_points( self, ptsx, ptsy, ran, lbl='Points given' ):
         if self.graph_count < 2:
             try:
@@ -120,15 +138,35 @@ class GraphGrid(Gtk.Grid):
             except Exception:
                 self.parent.raise_err_dialog( "Invalid points to interpolate" )
 
-    def on_clear_press( self, button ):
+    def on_clear_press( self, button, opt=True ):
         self.axis.cla()
         self.axis.grid( True )
         self.graph_count = 0
+        if opt:
+            dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.QUESTION,
+                    Gtk.ButtonsType.YES_NO, "Warning!")
+            dialog.format_secondary_text(
+                    "Do you wish to delete the Document in progress too?")
+            response = dialog.run()
+
+            if response == Gtk.ResponseType.YES:
+                self.parent.cmodule.document.proc_count = 0
+                self.parent.cmodule.document.story = []
+            self.lbl_snapshot.hide()
+            dialog.destroy()
 
     def on_add_press( self, button ):
         try:
             ran = list_parser( self.txt_ran.get_text() )
-            ran = [float(x) for x in ran]
+            if len(ran) == 2:
+                try:
+                    ran = [float(x) for x in ran]
+                except TypeError:
+                    self.parent.raise_err_dialog( 'Invalid range for plotting' )
+                    return
+            else:
+                self.parent.raise_err_dialog( 'Invalid range for plotting' )
+                return
             ran.sort()
             eq = list_parser( self.txt_eq.get_text() )
             if not ran:
@@ -142,6 +180,32 @@ class GraphGrid(Gtk.Grid):
                 return
             else:
                 self.render_main_eq( eq[0], self.txt_var.get_text(), ran )
-                self.save_render( "ans.png" )
         except Exception as e:
             self.parent.raise_err_dialog( 'Something went wrong' )
+        self.lbl_snapshot.hide()
+
+    def on_save_press( self, button ):
+        if self.parent.cmodule.document.story:
+            sdialog = Gtk.FileChooserDialog( 'Saving', self.parent,
+                    Gtk.FileChooserAction.SAVE,
+                    (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                        Gtk.STOCK_OK, Gtk.ResponseType.OK))
+            sdialog.set_current_name( "procedure.pdf" )
+            response = sdialog.run()
+            #--Checking if file exists and overwriting
+            if response == Gtk.ResponseType.OK:
+                if not os.path.exists( sdialog.get_filename() ):
+                    self.parent.cmodule.document.save_pdf( sdialog.get_filename() )
+                    print( 'saved' )
+                    sdialog.destroy()
+                else:
+                    dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.QUESTION,
+                            Gtk.ButtonsType.YES_NO, "Warning!")
+                    dialog.format_secondary_text(
+                            "Do you wish to overwrite this file?")
+                    overwrite = dialog.run()
+                    if overwrite == Gtk.ResponseType.YES:
+                        self.parent.cmodule.document.save_pdf( sdialog.get_filename() )
+                        print( 'overwrite' )
+                    dialog.destroy()
+                    sdialog.destroy()

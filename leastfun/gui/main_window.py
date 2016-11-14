@@ -18,10 +18,10 @@ class MainWin( Gtk.Window ):
         self.set_default_size( 200, 400 )
 
         self.tabs = Gtk.Notebook()
+        self.add( self.tabs )
 
         self.cmodule = MainGrid( self )
         self.gmodule = GraphGrid( self )
-        self.add( self.tabs )
         self.tabs.append_page( self.cmodule, Gtk.Label( "Control" ) )
         self.tabs.append_page( self.gmodule, Gtk.Label( "Graph" ) )
 

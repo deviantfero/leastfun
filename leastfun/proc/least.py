@@ -15,6 +15,7 @@ class Transformer():
         init_printing()
         self.var = symbols(str(var)) 
         self.fx = ""
+        self.aff = []
         self.ptsx = []
         self.ptsy = []
         self.rmat = []
@@ -22,6 +23,7 @@ class Transformer():
         self.cs = []
         self.eq = 0
         self.interpolation = []
+        self.pointti = []
 
     def reset_ans(self):
         """
@@ -30,7 +32,9 @@ class Transformer():
         self.rmat = []
         self.unsolved_m = []
         self.interpolation = []
+        self.pointti = []
         self.cs = []
+        self.aff = []
         self.eq = 0
 
 
@@ -43,6 +47,7 @@ class Transformer():
 
         """
         self.reset_ans()
+        self.aff = aff
         if len(self.ptsx) != len(self.ptsy):
             if len(self.ptsy) == 1:
                 tmp = []
@@ -66,6 +71,7 @@ class Transformer():
             tmp.append( m.row(i).dot( Matrix(self.ptsy)) )
             self.rmat.append(tmp)
 
+        self.unsolved_m = self.rmat
         self.rmat = Matrix(self.rmat).rref()[0]
 
         self.cs = N(self.rmat.col( self.rmat.cols - 1 ))
@@ -144,6 +150,7 @@ class Transformer():
 
         """
         self.reset_ans()
+        self.aff = aff
         tmp = []
         if len(self.ptsx) != 2:
             raise ValueError('Wrong range size')
@@ -157,8 +164,10 @@ class Transformer():
             self.unsolved_m.append(tmp)
             tmp = []
 
+        bak = self.unsolved_m
         self.unsolved_m = Matrix(self.unsolved_m)
         self.rmat = Matrix(self.unsolved_m).rref()[0]
+        self.unsolved_m = bak
 
         self.cs = N(self.rmat.col( self.rmat.cols - 1 ))
 
@@ -205,5 +214,6 @@ class Transformer():
         :pointl: Points to evaluate
         :returns: a list of results
         """
+        self.pointti = pointl
         self.interpolation = [ sympify(self.eq).subs(self.var, float(x)) for x in pointl ]
         return self.interpolation

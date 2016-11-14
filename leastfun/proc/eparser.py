@@ -8,7 +8,7 @@ def list_parser( txt ):
     :txt: the text to be parsed
     :returns: a list if it's succesfull or [] if it fails
     """
-    rexp = re.compile( "\d+\.\.\.\d+" )
+    rexp = re.compile( "-?\d+\.\.\.-?\d+" )
     txt = txt.replace( '^', '**' )
     if rexp.fullmatch(txt):
         tmp = txt.split('...')

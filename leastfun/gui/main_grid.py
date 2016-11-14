@@ -17,6 +17,7 @@ class MainGrid(Gtk.Grid):
         self.parent = parent
 
         self.answer = ""
+        self.document = PdfFactory()
 
         self.set_border_width( WIDTH )
         self.set_column_homogeneous( 1 )
@@ -165,6 +166,17 @@ class MainGrid(Gtk.Grid):
             self.txt_ptsx.show()
 
     def on_ok_press_disc( self, ok_button ):
+        #--Clearing graph
+        if self.document.proc_count > 0:
+            dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.QUESTION,
+                    Gtk.ButtonsType.YES_NO, "Warning!")
+            dialog.format_secondary_text(
+                    "Do you wish to delete the current graph?")
+            response = dialog.run()
+            if response == Gtk.ResponseType.YES:
+                self.parent.gmodule.on_clear_press( ok_button, False )
+            dialog.destroy()
+
         rexp = regexp.compile(r"[a-z]{1,2}")
         varn = self.txt_var.get_text()
 
@@ -203,19 +215,34 @@ class MainGrid(Gtk.Grid):
                     self.answer = expr.minimize_disc_pot()
                     expr.ptsx.sort()
                 if interpolate:
-                    expr.eval_interpolation( interpolate )
+                    try:
+                        expr.eval_interpolation( interpolate )
+                    except TypeError:
+                        self.parent.raise_err_dialog( 'Invalid points to interpolate' )
                     self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[last])], "Interpolation")
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[last])])
                 self.send_points( expr.ptsx, expr.ptsy, [float(expr.ptsx[0]), float(expr.ptsx[last])])
-                self.save_ans( "ans.png" )
-                make_pdf( expr, "result.pdf" )
-            except ( ValueError, AttributeError ) as e:
-                raise e
-                self.parent.raise_err_dialog( 'Invalid list size' )
+                self.document.add_procedure( expr, 0 )
+                self.save_ans( 'ans' + str(self.document.proc_count) +'.png' )
+            except ( ValueError, AttributeError, TypeError ) as e:
+                self.parent.raise_err_dialog( 'Something went wrong, check your function and values' )
+                self.parent.gmodule.on_clear_press( self.parent.gmodule.button_clear, False )
+                return
         self.txt_ans.set_label( str(self.answer) )
         self.txt_ans.show()
 
     def on_ok_press_cont( self, ok_button ):
+        #--Clearing graph
+        if self.document.proc_count > 0:
+            dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.QUESTION,
+                    Gtk.ButtonsType.YES_NO, "Warning!")
+            dialog.format_secondary_text(
+                    "Do you wish to delete the current graph?")
+            response = dialog.run()
+            if response == Gtk.ResponseType.YES:
+                self.parent.gmodule.on_clear_press( ok_button, False )
+            dialog.destroy()
+
         rexp = regexp.compile(r"[a-z]{1,2}")
         varn = self.txt_var.get_text()
 
@@ -240,27 +267,34 @@ class MainGrid(Gtk.Grid):
                 elif self.aff_combo.get_active() == 1:
                     if 'cos' in expr.fx or 'sin' in expr.fx:
                         self.parent.raise_err_dialog('Invalid fx in this affinity')
+                        return
                     else:
                         self.answer = expr.minimize_cont_exp()
                 elif self.aff_combo.get_active() == 3:
                     if float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
                         self.parent.raise_err_dialog('Invalid range in this affinity')
+                        return
                     else:
                         self.answer = expr.minimize_cont_ln()
                 else:
                     if float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
                         self.parent.raise_err_dialog('Invalid range in this affinity')
+                        return
                     else:
                         self.answer = expr.minimize_cont_pot()
-                    if interpolate:
-                            expr.eval_interpolation( interpolate )
-                            self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[last])], "Interpolation")
+                if interpolate:
+                        expr.eval_interpolation( interpolate )
+                        self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[1])], "Interpolation")
+                        print( "interpolating" )
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
                 self.send_ans( str(expr.fx), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
-                self.save_ans( "ans.png" )
-            except ( ValueError, AttributeError ) as e:
+                self.document.add_procedure( expr, 1 )
+                self.save_ans( 'ans' + str( self.document.proc_count ) + '.png' )
+            except ( ValueError, AttributeError, TypeError ) as e:
                 print( expr.ptsx )
-                raise e
-                self.parent.raise_err_dialog( 'Wrong range' )
+                self.parent.raise_err_dialog( 'Something went wrong, check your function and values' )
+                self.parent.gmodule.on_clear_press( self.parent.gmodule.button_clear, False )
+                return
+                #raise e
         self.txt_ans.set_label( str(self.answer) )
         self.txt_ans.show()
