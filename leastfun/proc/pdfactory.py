@@ -6,7 +6,7 @@ import copy
 from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak, Table
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 
@@ -19,8 +19,9 @@ class PdfFactory():
     def __init__(self):
         self.story=[]
         self.proc_count = 0
+        self.transformer = 0
 
-    def add_procedure(self, transformer, case):
+    def add_procedure(self, transformer, case, interpolation=False):
         """creates and saves a document with all the
         procedure to create a leastsquare interpolation
         to the filename specified
@@ -28,8 +29,9 @@ class PdfFactory():
         :transformer: data structure that holds all information
         """
         mode = ''
-        self.proc_count += 1
         graph = 'ans' + str( self.proc_count ) + '.png'
+        self.transformer = transformer
+        self.proc_count += 1
 
         styles=getSampleStyleSheet()
         styles.add(ParagraphStyle(name='Justify', alignment=TA_JUSTIFY))
@@ -94,14 +96,43 @@ class PdfFactory():
 
         self.story.append(Spacer(1, LINEBREAK*2))
 
-        ptext = '<font size=12><strong>Ecuación:</strong> %s</font>' % str(transformer.eq).replace( '**', '^' )
+        ptext = '<font size=12><strong>g(x):</strong> %s</font>' % str(transformer.eq).replace( '**', '^' )
         self.story.append(Paragraph(ptext, styles["Normal"]))
         self.story.append(Spacer(1, LINEBREAK))
 
+        if case == 1:
+            ptext = '<font size=12><strong>f(x):</strong> %s</font>' % str(transformer.fx).replace( '**', '^' )
+            self.story.append(Paragraph(ptext, styles["Normal"]))
+            self.story.append(Spacer(1, LINEBREAK))
+
         im = Image(graph, 6*inch, 4*inch)
         self.story.append(im)
-        self.story.append(PageBreak())
+        if not interpolation:
+            self.story.append(PageBreak())
         print( ':: Procedure Added' )
+
+    def add_interpolation_table( self, data, disc=True ):
+        if len(data[0]) > 8:
+            raise Exception
+        data[0] = [ round(x, 6) for x in data[0] ]
+        data[1] = [ round(x, 6) for x in data[1] ]
+        if not disc:
+            tmp = []
+            data[2] = [ round(x, 6) for x in data[2] ]
+            for i, r in enumerate(data[1]):
+                tmp.append(str(round( abs((data[2][i] - r)/data[2][i])*0.1, 3)) + "%")
+            data.append(tmp)
+            data[2] = ['f(x)'] + data[2]
+            data[3] = ['ERR%'] + data[3]
+        data[0] = ['PUNTOS'] + data[0]
+        data[1] = ['g(x)'] + data[1]
+
+        t = Table( data )
+        t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.lavender),
+                               ('BACKGROUND',(0,0),(0,-1),colors.beige),
+                               ('GRID',(0,0),(-1,-1),0.5,colors.black)]))
+        self.story.append(t)
+        self.story.append(PageBreak())
 
     def save_pdf( self, filename ):
         doc = SimpleDocTemplate(filename,pagesize=letter,

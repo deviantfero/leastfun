@@ -24,6 +24,7 @@ class Transformer():
         self.eq = 0
         self.interpolation = []
         self.pointti = []
+        self.evaluated = []
 
     def reset_ans(self):
         """
@@ -33,6 +34,7 @@ class Transformer():
         self.unsolved_m = []
         self.interpolation = []
         self.pointti = []
+        self.evaluated = []
         self.cs = []
         self.aff = []
         self.eq = 0
@@ -217,3 +219,8 @@ class Transformer():
         self.pointti = pointl
         self.interpolation = [ sympify(self.eq).subs(self.var, float(x)) for x in pointl ]
         return self.interpolation
+
+    def eval_function( self, pointl ):
+        self.pointti = pointl
+        self.evaluated = [ sympify(self.fx).subs(self.var, float(x)) for x in pointl ]
+        return self.evaluated

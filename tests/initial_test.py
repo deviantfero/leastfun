@@ -81,7 +81,7 @@ class leastTest(unittest.TestCase):
         for varn in [ 'van', 'voxfm' ]:
             expr = Transformer(varn)
             expr.ptsx = [1,2]
-            expr.fx = 'exp('+varn+')'
+            expr.fx = 'cos('+varn+')'
             val = expr.minimize_cont([1, varn])
             val = val.subs(expr.var,0)
             self.assertTrue(abs(N(val) + 2.22133020755) < 10**-4)

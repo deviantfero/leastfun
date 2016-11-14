@@ -126,7 +126,10 @@ class GraphGrid(Gtk.Grid):
         self.fig.savefig(filename)
 
     def on_snapshot_press( self, button ):
-        self.save_render( 'ans' + str(self.parent.cmodule.document.proc_count) + '.png' )
+        if self.parent.cmodule.document.proc_count > 0:
+            self.save_render( 'ans' + str(self.parent.cmodule.document.proc_count - 1) + '.png' )
+        else:
+            self.save_render( 'ans' + str(self.parent.cmodule.document.proc_count) + '.png' )
         self.lbl_snapshot.show()
 
     def render_points( self, ptsx, ptsy, ran, lbl='Points given' ):

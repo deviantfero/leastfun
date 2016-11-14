@@ -217,13 +217,22 @@ class MainGrid(Gtk.Grid):
                 if interpolate:
                     try:
                         expr.eval_interpolation( interpolate )
+                        self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[last])], "Interpolation")
                     except TypeError:
                         self.parent.raise_err_dialog( 'Invalid points to interpolate' )
-                    self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[last])], "Interpolation")
+                        interpolate = []
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[last])])
                 self.send_points( expr.ptsx, expr.ptsy, [float(expr.ptsx[0]), float(expr.ptsx[last])])
-                self.document.add_procedure( expr, 0 )
                 self.save_ans( 'ans' + str(self.document.proc_count) +'.png' )
+                if interpolate:
+                    try:
+                        self.document.add_procedure( expr, 0, True )
+                        self.document.add_interpolation_table( [interpolate, expr.interpolation] )
+                    except Exception:
+                        self.document.add_procedure( expr, 0, False )
+                        self.parent.raise_err_dialog('Limit of points to interpolate is 8')
+                else:
+                    self.document.add_procedure( expr, 0 )
             except ( ValueError, AttributeError, TypeError ) as e:
                 self.parent.raise_err_dialog( 'Something went wrong, check your function and values' )
                 self.parent.gmodule.on_clear_press( self.parent.gmodule.button_clear, False )
@@ -265,20 +274,20 @@ class MainGrid(Gtk.Grid):
                     else:
                         self.answer = expr.minimize_cont(listaff)
                 elif self.aff_combo.get_active() == 1:
-                    if 'cos' in expr.fx or 'sin' in expr.fx:
-                        self.parent.raise_err_dialog('Invalid fx in this affinity')
+                    if 'cos' in expr.fx or 'sin' in expr.fx or float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
+                        self.parent.raise_err_dialog('Invalid fx or range in this affinity')
                         return
                     else:
                         self.answer = expr.minimize_cont_exp()
                 elif self.aff_combo.get_active() == 3:
-                    if float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
-                        self.parent.raise_err_dialog('Invalid range in this affinity')
+                    if 'cos' in expr.fx or 'sin' in expr.fx or float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
+                        self.parent.raise_err_dialog('Invalid fx or range in this affinity')
                         return
                     else:
                         self.answer = expr.minimize_cont_ln()
                 else:
-                    if float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
-                        self.parent.raise_err_dialog('Invalid range in this affinity')
+                    if 'cos' in expr.fx or 'sin' in expr.fx or float(expr.ptsx[0])*float(expr.ptsx[1]) < 0:
+                        self.parent.raise_err_dialog('Invalid fx or range in this affinity')
                         return
                     else:
                         self.answer = expr.minimize_cont_pot()
@@ -288,8 +297,18 @@ class MainGrid(Gtk.Grid):
                         print( "interpolating" )
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
                 self.send_ans( str(expr.fx), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
-                self.document.add_procedure( expr, 1 )
                 self.save_ans( 'ans' + str( self.document.proc_count ) + '.png' )
+                if interpolate:
+                    expr.eval_function( interpolate )
+                    try:
+                        self.document.add_procedure( expr, 1, True )
+                        self.document.add_interpolation_table( [interpolate, expr.interpolation, expr.evaluated], False )
+                    except Exception:
+                        self.document.add_procedure( expr, 1, False )
+                        self.parent.raise_err_dialog('Limit of points to interpolate is 8')
+                        return
+                else:
+                    self.document.add_procedure( expr, 1 )
             except ( ValueError, AttributeError, TypeError ) as e:
                 print( expr.ptsx )
                 self.parent.raise_err_dialog( 'Something went wrong, check your function and values' )
