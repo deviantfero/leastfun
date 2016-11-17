@@ -2,6 +2,8 @@ from gi import require_version
 require_version( 'Gtk', '3.0' )
 from gi.repository import Gtk
 import re as regexp
+import os
+import sys
 
 from ..proc.eparser import *
 from ..proc.least import *
@@ -98,6 +100,8 @@ class MainGrid(Gtk.Grid):
         #--Buttons
         self.button_ok = Gtk.Button( 'Ok' )
         self.handler_id = self.button_ok.connect( "pressed", self.on_ok_press_disc )
+        self.button_help = Gtk.Button( 'Help' )
+        self.handler_id = self.button_help.connect( "pressed", self.on_help_press )
 
         #--RadioButtons
         self.radio_disc = Gtk.RadioButton.new_with_label_from_widget( None, 'Discrete' )
@@ -119,6 +123,7 @@ class MainGrid(Gtk.Grid):
         self.text_grid.attach( self.txt_inter, 2, 5, 2, 1 )
 
         self.button_grid.attach( self.button_ok, 1, 1, 1, 1 )
+        self.button_grid.attach( self.button_help, 1, 2, 1, 1 )
 
         self.radio_grid.attach( self.radio_disc, 1, 1, 1, 1 )
         self.radio_grid.attach( self.radio_cont, 2, 1, 1, 1 )
@@ -146,6 +151,13 @@ class MainGrid(Gtk.Grid):
         else:
             self.txt_aff.hide()
             self.lbl_aff.hide()
+
+    def on_help_press( self, button ):
+        print( 'help me' )
+        if sys.platform.startswith( 'linux' ):
+            os.system( 'xdg-open ./docs/help.pdf' )
+        elif sys.platform.startswith( 'win32' ):
+            os.system( 'start ./docs/help.pdf')
 
     def on_mode_change( self, r_button, mode ):
         if r_button.get_active() and mode == 'cont':
