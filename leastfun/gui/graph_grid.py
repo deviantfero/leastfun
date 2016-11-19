@@ -104,6 +104,7 @@ class GraphGrid(Gtk.Grid):
 
     def render_main_eq( self, eq, vr, ran ):
         seq = sympify( eq )
+        eq = eq.replace( '**', '^' )
         evaleq = lambdify(sympify( vr ), seq, modules=['numpy'])
         ran = linspace( ran[0], ran[1], 200)
         self.axis.set_title( 'fig.' + str(self.parent.cmodule.document.proc_count) )
@@ -113,11 +114,12 @@ class GraphGrid(Gtk.Grid):
         if self.graph_count > 0:
             line = COLOR[random.randint(0, len(COLOR) - 1)] + STYLE[random.randint(0, len(STYLE) - 1)]
             self.axis.set_ylim( top=10 )
-            self.axis.plot( ran, evaleq(ran), line, label=seq )
+            self.axis.plot( ran, evaleq(ran), line, label=eq )
+            print( str(seq) )
             self.axis.legend( loc='best' )
             self.axis.margins( 0.4 )
         else:
-            self.axis.plot( ran, evaleq(ran), 'r', label=seq )
+            self.axis.plot( ran, evaleq(ran), 'r', label=eq )
             self.axis.legend( loc='best' )
             self.axis.margins( 0.4 )
         self.graph_count += 1
@@ -179,7 +181,7 @@ class GraphGrid(Gtk.Grid):
                 self.parent.raise_err_dialog( 'Invalid Equation' )
                 return
             elif len(self.txt_var.get_text()) > 2:
-                self.parent.raise_err_dialog( 'Invalid Equation' )
+                self.parent.raise_err_dialog( 'Invalid Variable' )
                 return
             else:
                 self.render_main_eq( eq[0], self.txt_var.get_text(), ran )

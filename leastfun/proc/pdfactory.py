@@ -60,7 +60,7 @@ class PdfFactory():
         self.story.append(Paragraph(ptext, styles["Normal"]))
         self.story.append(Spacer(1, LINEBREAK))
         for i, c in enumerate(transformer.unsolved_m):
-            ptext = '<font size=10>'
+            ptext = '<font size=11><strong>EQ%d: </strong></font><font size=10>' % i
             for j, e in enumerate( c ):
                 if j < len(c) - 2:
                     try:
@@ -89,10 +89,11 @@ class PdfFactory():
         self.story.append(Spacer(1, LINEBREAK))
         for i, c in enumerate(transformer.cs):
             try:
-                ptext = '<font size=10>C%s = %s </font>' % ( str(round(i,6)), str(c) )
+                ptext = '<font size=10>C%s = %s </font>' % ( str(i), str(round(c,6)) )
                 self.story.append(Paragraph(ptext, styles["Normal"]))
-            except AttributeError:
-                print( "UPS CAUGHT" )
+            except ( AttributeError, TypeError ):
+                ptext = '<font size=10>C%s = %s </font>' % ( str(i), str(c) )
+                self.story.append(Paragraph(ptext, styles["Normal"]))
 
         self.story.append(Spacer(1, LINEBREAK*2))
 

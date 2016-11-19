@@ -91,20 +91,19 @@ class Transformer():
         Gets the least square with the aff = [1, ln(var)]
         :returns: leastsquare equation where y = exp(leastsquare)
         """
-        oldptsy = self.ptsy
         if len(self.ptsy) == 1:
             tmp = []
             for val in self.ptsx:
-                tmp.append( log(self.ptsy[0]).subs(self.var,val) )
+                tmp.append( self.ptsy[0].subs(self.var,val) )
             self.ptsy = tmp
-        else:
-            self.ptsy = [log(vary) for vary in self.ptsy]
 
+        oldptsy = self.ptsy
+        self.ptsy = [log(vary) for vary in self.ptsy]
         for x in self.ptsx:
             if x == 0:
                 raise ValueError('No 0 on LN')
         self.eq = exp(self.minimize_disc([1,'ln('+str(self.var)+')']))
-        #self.ptsy = oldptsy
+        self.ptsy = oldptsy
         return self.eq
 
     def minimize_disc_ln(self):
@@ -112,7 +111,6 @@ class Transformer():
         Gets the least square with the aff = [1, ln(var)]
         :returns: leastsquare equation where y = leastsquare
         """
-        oldptsy = self.ptsy
         if len(self.ptsy) == 1:
             tmp = []
             for val in self.ptsx:
@@ -123,7 +121,6 @@ class Transformer():
             if x == 0:
                 raise ValueError('No 0 on LN')
         self.eq = self.minimize_disc([1,'ln('+str(self.var)+')'])
-        #self.ptsy = oldptsy
         return self.eq
 
     def minimize_disc_exp(self):
@@ -131,16 +128,15 @@ class Transformer():
         Gets the least square with the aff = [1, var]
         :returns: leastsquare equation where y = exp(leastsquare)
         """
-        oldptsy = self.ptsy
         if len(self.ptsy) == 1:
             tmp = []
             for val in self.ptsx:
-                tmp.append( log(self.ptsy[0]).subs(self.var,val) )
+                tmp.append( self.ptsy[0].subs(self.var,val) )
             self.ptsy = tmp
-        else:
-            self.ptsy = [log(vary) for vary in self.ptsy]
+        oldptsy = self.ptsy
+        self.ptsy = [log(vary) for vary in self.ptsy]
         self.eq = exp(self.minimize_disc([1, self.var]))
-        #self.ptsy = oldptsy
+        self.ptsy = oldptsy
         return self.eq
 
     def minimize_cont(self, aff):
@@ -187,8 +183,10 @@ class Transformer():
         in a continuous range
         :returns: leastsquare equation where y = exp(leastsquare)
         """
+        oldfx = self.fx
         self.fx = 'log('+self.fx+')'
         self.eq = exp(self.minimize_cont([1, log(self.var)]))
+        self.fx = oldfx
         return self.eq
 
     def minimize_cont_ln(self):
@@ -206,8 +204,10 @@ class Transformer():
         in a continuous range
         :returns: leastsquare equation where y = exp(leastsquare)
         """
+        oldfx = self.fx
         self.fx = 'log('+self.fx+')'
         self.eq = exp(self.minimize_cont([1, self.var]))
+        self.fx = oldfx
         return self.eq
 
     def eval_interpolation(self, pointl):
