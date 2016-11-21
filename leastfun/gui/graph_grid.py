@@ -104,8 +104,8 @@ class GraphGrid(Gtk.Grid):
 
     def render_main_eq( self, eq, vr, ran ):
         seq = sympify( eq )
-        eq = eq.replace( '**', '^' )
         evaleq = lambdify(sympify( vr ), seq, modules=['numpy'])
+        eq = str(eq).replace( '**', '^' )
         ran = linspace( ran[0], ran[1], 200)
         self.axis.set_title( 'fig.' + str(self.parent.cmodule.document.proc_count) )
         zp = ZoomPan()
@@ -186,7 +186,8 @@ class GraphGrid(Gtk.Grid):
             else:
                 self.render_main_eq( eq[0], self.txt_var.get_text(), ran )
         except Exception as e:
-            self.parent.raise_err_dialog( 'Something went wrong' )
+            self.parent.raise_err_dialog( 'Something went wrong: ' + str(e) )
+            raise e
         self.lbl_snapshot.hide()
 
     def on_save_press( self, button ):
