@@ -201,10 +201,13 @@ class MainGrid(Gtk.Grid):
 
         if not listx and listy:
             self.parent.raise_err_dialog( 'Invalid X points list' )
+            return
         elif not listy and listx:
             self.parent.raise_err_dialog( 'Invalid F(X) points list' )
+            return
         elif not listy and not listx:
             self.parent.raise_err_dialog( 'Invalid or empty points list on X and Y' )
+            return
         else:
             try:
                 expr = Transformer( varn )
@@ -227,7 +230,7 @@ class MainGrid(Gtk.Grid):
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[last])])
                 self.send_points( expr.ptsx, expr.ptsy, [float(expr.ptsx[0]), float(expr.ptsx[last])])
                 self.save_ans( 'ans' + str(self.document.proc_count) +'.png' )
-            except ( ValueError, AttributeError, TypeError ) as e:
+            except ( ValueError, AttributeError, TypeError, NameError ) as e:
                 self.parent.raise_err_dialog( 'Something went wrong: %s' % e )
                 self.parent.gmodule.on_clear_press( self.parent.gmodule.button_clear, False )
                 print( 'Handling runtime error caught: ', e )
@@ -298,24 +301,30 @@ class MainGrid(Gtk.Grid):
                         return
                     else:
                         self.answer = expr.minimize_cont_pot()
+                if interpolate and str( self.answer ):
+                    try:
+                        expr.eval_interpolation( interpolate )
+                        self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[1])], "Interpolation")
+                    except ( ValueError, AttributeError, TypeError ) as e:
+                        self.parent.raise_err_dialog( 'Invalid points to interpolate' )
+                        expr.interpolation = []
+                        interpolate = []
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
                 self.send_ans( str(expr.fx), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
                 self.save_ans( 'ans' + str( self.document.proc_count ) + '.png' )
-            except ( ValueError, AttributeError, TypeError ) as e:
+            except ( ValueError, AttributeError, TypeError, NameError ) as e:
                 print( expr.ptsx )
                 self.parent.raise_err_dialog( 'Something went wrong: %s' % e )
                 self.parent.gmodule.on_clear_press( self.parent.gmodule.button_clear, False )
                 return
-        if interpolate and str( self.answer ):
+        if expr.interpolation and interpolate:
             try:
-                expr.eval_interpolation( interpolate )
-                self.send_points( interpolate, expr.interpolation, [float(expr.ptsx[0]), float(expr.ptsx[1])], "Interpolation")
+                expr.eval_function( interpolate )
                 self.document.add_procedure( expr, 1, True )
-                self.document.add_interpolation_table( [interpolate, expr.interpolation] )
+                self.document.add_interpolation_table( [interpolate, expr.evaluated, expr.interpolation], False )
             except ( Exception ,TypeError, AttributeError ) as e:
                 self.document.add_procedure( expr, 1, False )
-                self.parent.raise_err_dialog( 'Invalid points to interpolate' )
-                interpolate = []
+                self.parent.raise_err_dialog( 'There was trouble adding the interpolation table' )
         else:
             self.document.add_procedure( expr, 1 )
         self.txt_ans.set_label( str(self.answer).replace( '**', '^' ) )

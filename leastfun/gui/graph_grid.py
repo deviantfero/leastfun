@@ -109,9 +109,11 @@ class GraphGrid(Gtk.Grid):
         ran = linspace( ran[0], ran[1], 200)
         self.axis.set_title( 'fig.' + str(self.parent.cmodule.document.proc_count) )
         zp = ZoomPan()
-        figZoom = zp.zoom_factory( self.axis, base_scale=0.9 )
+        figZoom = zp.zoom_factory( self.axis, base_scale=1.5 )
         figPan = zp.pan_factory( self.axis )
+
         if self.graph_count > 0:
+            #chooses random style for graph line
             line = COLOR[random.randint(0, len(COLOR) - 1)] + STYLE[random.randint(0, len(STYLE) - 1)]
             self.axis.set_ylim( top=10 )
             self.axis.plot( ran, evaleq(ran), line, label=eq )
@@ -119,9 +121,13 @@ class GraphGrid(Gtk.Grid):
             self.axis.legend( loc='best' )
             self.axis.margins( 0.4 )
         else:
+            #first one is always red
             self.axis.plot( ran, evaleq(ran), 'r', label=eq )
             self.axis.legend( loc='best' )
             self.axis.margins( 0.4 )
+
+        #makes the plot inmediatly render
+        self.axis.figure.canvas.draw()
         self.graph_count += 1
 
     def save_render( self, filename ):
@@ -187,7 +193,6 @@ class GraphGrid(Gtk.Grid):
                 self.render_main_eq( eq[0], self.txt_var.get_text(), ran )
         except Exception as e:
             self.parent.raise_err_dialog( 'Something went wrong: ' + str(e) )
-            raise e
         self.lbl_snapshot.hide()
 
     def on_save_press( self, button ):

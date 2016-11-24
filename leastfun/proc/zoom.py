@@ -15,6 +15,7 @@ class ZoomPan:
         self.y1 = None
         self.xpress = None
         self.ypress = None
+        self.count = 0
 
 
     def zoom_factory(self, ax, base_scale = 2.):
@@ -25,11 +26,11 @@ class ZoomPan:
             xdata = event.xdata # get event x location
             ydata = event.ydata # get event y location
 
-            if event.button == 'down':
-                # deal with zoom in
-                scale_factor = 1 / base_scale
-            elif event.button == 'up':
+            if event.button == 'up':
                 # deal with zoom out
+                scale_factor = 1 / base_scale
+            elif event.button == 'down':
+                # deal with zoom in
                 scale_factor = base_scale
             else:
                 # deal with something that should never happen
@@ -66,6 +67,7 @@ class ZoomPan:
         def onMotion(event):
             if self.press is None: return
             if event.inaxes != ax: return
+            self.count += 1
             dx = event.xdata - self.xpress
             dy = event.ydata - self.ypress
             self.cur_xlim -= dx
@@ -73,7 +75,10 @@ class ZoomPan:
             ax.set_xlim(self.cur_xlim)
             ax.set_ylim(self.cur_ylim)
 
-            ax.figure.canvas.draw()
+            #limit the times it renders
+            if self.count % 5 == 0:
+                ax.figure.canvas.draw()
+                self.count = 0
 
         fig = ax.get_figure() # get the figure of interest
 
