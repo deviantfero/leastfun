@@ -230,7 +230,7 @@ class MainGrid(Gtk.Grid):
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[last])])
                 self.send_points( expr.ptsx, expr.ptsy, [float(expr.ptsx[0]), float(expr.ptsx[last])])
                 self.save_ans( 'ans' + str(self.document.proc_count) +'.png' )
-            except ( ValueError, AttributeError, TypeError, NameError ) as e:
+            except Exception as e:
                 self.parent.raise_err_dialog( 'Something went wrong: %s' % e )
                 self.parent.gmodule.on_clear_press( self.parent.gmodule.button_clear, False )
                 print( 'Handling runtime error caught: ', e )
@@ -312,7 +312,7 @@ class MainGrid(Gtk.Grid):
                 self.send_ans( str(self.answer), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
                 self.send_ans( str(expr.fx), varn, [float(expr.ptsx[0]), float(expr.ptsx[1])])
                 self.save_ans( 'ans' + str( self.document.proc_count ) + '.png' )
-            except ( ValueError, AttributeError, TypeError, NameError ) as e:
+            except Exception as e:
                 print( expr.ptsx )
                 self.parent.raise_err_dialog( 'Something went wrong: %s' % e )
                 self.parent.gmodule.on_clear_press( self.parent.gmodule.button_clear, False )

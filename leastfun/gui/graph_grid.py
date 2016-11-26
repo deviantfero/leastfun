@@ -109,7 +109,7 @@ class GraphGrid(Gtk.Grid):
         ran = linspace( ran[0], ran[1], 200)
         self.axis.set_title( 'fig.' + str(self.parent.cmodule.document.proc_count) )
         zp = ZoomPan()
-        figZoom = zp.zoom_factory( self.axis, base_scale=1.5 )
+        figZoom = zp.zoom_factory( self.axis, base_scale=1.05 )
         figPan = zp.pan_factory( self.axis )
 
         if self.graph_count > 0:

@@ -19,5 +19,5 @@ def list_parser( txt ):
 
     try:
         return [ parse_expr(n, evaluate=True) for n in txtlist ]
-    except ( SyntaxError, sympy.parsing.sympy_tokenize.TokenError ):
+    except ( SyntaxError, sympy.parsing.sympy_tokenize.TokenError, AttributeError ):
         return []
