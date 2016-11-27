@@ -16,6 +16,10 @@ class MainWin( Gtk.Window ):
         self.connect('delete-event', Gtk.main_quit)
         self.set_border_width( WIDTH )
         self.set_default_size( 200, 400 )
+        try:
+            self.set_default_icon_from_file( "./img/icon.png" )
+        except:
+            print( "Default icon loaded instead" )
 
         self.tabs = Gtk.Notebook()
         self.add( self.tabs )

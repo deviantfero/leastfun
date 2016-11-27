@@ -124,7 +124,7 @@ build_options = {
     'include_files': []
 }
 
-setup(name = "LeastFun",
+setup(name = "noether",
       version = "0.2.0",
       description = 'Project',
       author = 'deviantfero',
