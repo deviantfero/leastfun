@@ -13,7 +13,7 @@ class Transformer():
         if(var == 'var'):
             var = 'varn'
         init_printing()
-        self.var = symbols(str(var)) 
+        self.var = symbols(str(var))
         self.fx = ""
         self.aff = []
         self.ptsx = []
