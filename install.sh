@@ -12,7 +12,7 @@ function install_dependencies {
 		version="$( uname -a | grep -Eo "(eneric|bian)" )"
 		if [ -n "$version" ]; then
 			echo ":: DEBIAN OR *BUNTU DETECTED"
-			sh -c "sudo apt-get install feh python3-gi python-gobject python-pip python-imaging python-matplotlib python-sympy && pip install Pillow"
+			sh -c "sudo apt-get install feh python3-gi python-gobject python3-pip python-imaging && pip3 install matplotlib sympy tk"
 		else
 			echo ":: ANOTHER DISTRO DETECTED:: INSTALL DEPENDENCIES FOR YOUR DISTRO"
 			echo
